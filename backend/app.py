@@ -3,6 +3,7 @@ import psycopg2
 import psycopg2.pool
 import jwt
 import datetime
+import subprocess  # <-- IMPORT THIS MODULE
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
@@ -23,7 +24,6 @@ app = Flask(__name__)
 bcrypt = Bcrypt(app)
 
 # --- Dynamic CORS Configuration ---
-# Get the frontend URL from an environment variable, with a fallback for local development
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
 CORS(app, resources={r"/api/*": {"origins": FRONTEND_URL}})
 
@@ -189,6 +189,41 @@ def protect_route(current_user_id):
         return send_file(protected_stream, as_attachment=True, download_name='protected.pdf', mimetype='application/pdf')
     except Exception as e:
         return jsonify({'error': f'An error occurred: {str(e)}'}), 500
+
+# --- NEW DEBUG ENDPOINT ---
+@app.route('/api/debug-env', methods=['GET'])
+def debug_env():
+    """
+    A temporary endpoint to check the server environment for LibreOffice.
+    """
+    try:
+        # We will try to find the path of the 'libreoffice' executable.
+        result = subprocess.run(
+            ['which', 'libreoffice'],
+            capture_output=True,
+            text=True,
+            check=False  # Do not raise an error if the command fails
+        )
+        
+        path_output = result.stdout.strip()
+        error_output = result.stderr.strip()
+
+        if result.returncode == 0:
+            message = "LibreOffice executable found."
+            path = path_output
+        else:
+            message = "LibreOffice executable NOT found."
+            path = "N/A"
+
+        return jsonify({
+            "message": message,
+            "path": path,
+            "return_code": result.returncode,
+            "error_details": error_output
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": f"An exception occurred while running debug command: {str(e)}"}), 500
 
 # --- Main Entry Point ---
 if __name__ == '__main__':
