@@ -43,12 +43,12 @@
     cursor: pointer;
     background-color: #162447;
     transition: background-color 0.3s, border-color 0.3s;
-    margin-bottom: 20px; /* Added space below dropzone */
+    margin-bottom: 20px;
 }
 
 .dropzone:hover, .dropzone-active {
     background-color: #1f4068;
-    border-color: #8A2BE2; /* Purple from auth forms */
+    border-color: #8A2BE2;
 }
 
 .dropzone p {
@@ -64,14 +64,24 @@
     gap: 20px;
 }
 
+/* --- UPDATED STYLES START HERE --- */
+
 .tool-card {
     background-color: #162447;
     border-radius: 8px;
     padding: 20px;
-    text-align: center;
+    border: 1px solid transparent;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
-    border: 1px solid transparent;
+    
+    /* Use Flexbox for easy vertical centering */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    
+    /* Force the card to be a square */
+    aspect-ratio: 1 / 1;
 }
 
 .tool-card:hover {
@@ -80,7 +90,6 @@
     border-color: #8A2BE2;
 }
 
-/* Style for disabled tool cards */
 .tool-card.disabled {
     cursor: not-allowed;
     opacity: 0.5;
@@ -91,15 +100,23 @@
     border-color: transparent;
 }
 
-
 .tool-card img {
-    height: 50px;
-    margin-bottom: 15px;
+    /* Remove fixed height, use responsive width */
+    width: 60%; 
+    max-height: 60%; /* Prevent image from being too tall */
+    
+    /* Ensure image scales properly without stretching */
+    object-fit: contain; 
+    
+    margin-bottom: 15px; /* Space between icon and text */
 }
+
+/* --- UPDATED STYLES END HERE --- */
 
 .tool-card p {
     margin: 0;
     font-weight: 500;
+    text-align: center; /* Ensure text is centered */
 }
 
 .error-message-dashboard {
@@ -124,87 +141,6 @@
     align-items: center;
     z-index: 2000;
 }
-
-.spinner {
-    border: 8px solid #f3f3f330;
-    border-top: 8px solid #8A2BE2; /* Purple */
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Styles for the modal inputs/buttons */
-.range-input {
-    width: 100%;
-    padding: 12px;
-    margin: 10px 0 20px 0;
-    box-sizing: border-box;
-    background-color: #2a2a2a;
-    border: 1px solid #444;
-    border-radius: 4px;
-    color: white;
-    font-size: 1rem;
-}
-
-.modal-action-btn {
-    width: 100%;
-    background: linear-gradient(90deg, #8A2BE2, #4B0082);
-    color: white;
-    padding: 15px;
-    border: none;
-    border-radius: 4px;
-    font-size: 1.1rem;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-/* Corrected styles for the compression modal options */
-.compression-options {
-    display: flex;
-    flex-direction: column; /* Stack the options vertically */
-    gap: 15px; /* Add space between the options */
-    margin-bottom: 25px; /* Add space before the main button */
-    text-align: left; /* Align text to the left */
-}
-
-.compression-option {
-    padding: 15px;
-    border: 1px solid #444;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s;
-}
-
-.compression-option.selected {
-    background-color: #8A2BE2;
-    border-color: #8A2BE2;
-}
-
-.compression-option:not(.selected):hover {
-    background-color: #2a2a2a;
-    border-color: #666;
-}
-
-.compression-option p {
-    margin: 0 0 5px 0; /* Add a little space below the title */
-    font-weight: bold;
-    font-size: 1.1rem;
-}
-
-.compression-option span {
-    font-size: 0.9rem;
-    color: #ccc;
-
-
-}
-
-/* ... at the bottom of the file ... */
 
 .loading-content {
     display: flex;
@@ -238,4 +174,79 @@
     font-weight: bold;
     font-size: 0.9rem;
     transition: width 0.3s ease-in-out;
+}
+
+.spinner {
+    border: 8px solid #f3f3f330;
+    border-top: 8px solid #8A2BE2;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.range-input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0 20px 0;
+    box-sizing: border-box;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: white;
+    font-size: 1rem;
+}
+
+.modal-action-btn {
+    width: 100%;
+    background: linear-gradient(90deg, #8A2BE2, #4B0082);
+    color: white;
+    padding: 15px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.compression-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 25px;
+    text-align: left;
+}
+
+.compression-option {
+    padding: 15px;
+    border: 1px solid #444;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.compression-option.selected {
+    background-color: #8A2BE2;
+    border-color: #8A2BE2;
+}
+
+.compression-option:not(.selected):hover {
+    background-color: #2a2a2a;
+    border-color: #666;
+}
+
+.compression-option p {
+    margin: 0 0 5px 0;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.compression-option span {
+    font-size: 0.9rem;
+    color: #ccc;
 }
