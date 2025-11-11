@@ -3,7 +3,7 @@ import psycopg2
 import psycopg2.pool
 import jwt
 import datetime
-import subprocess  # <-- IMPORT THIS MODULE
+import subprocess
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
@@ -16,14 +16,12 @@ from pdf_utils import (
 )
 import io
 
-# Load environment variables from .env file (for local development)
+# Load environment variables
 load_dotenv()
 
 # --- App Initialization ---
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
-
-# --- Dynamic CORS Configuration ---
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
 CORS(app, resources={r"/api/*": {"origins": FRONTEND_URL}})
 
@@ -33,12 +31,6 @@ DATABASE_URL = os.getenv('DATABASE_URL')
 
 # --- Database Connection Pool ---
 pool = psycopg2.pool.SimpleConnectionPool(1, 10, dsn=DATABASE_URL)
-
-def get_db_connection():
-    return pool.getconn()
-
-def release_db_connection(conn):
-    pool.putconn(conn)
 
 # --- JWT Authorization Decorator ---
 def token_required(f):
@@ -60,33 +52,32 @@ def token_required(f):
     return decorated
 
 # --- API Endpoints ---
+# NO TOKEN REQUIRED for register and login
 @app.route('/api/register', methods=['POST'])
 def register():
     data = request.get_json()
     email, password = data.get('email'), data.get('password')
-    if not email or not password:
-        return jsonify({"error": "Email and password are required"}), 400
+    if not email or not password: return jsonify({"error": "Email and password are required"}), 400
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-    conn = get_db_connection()
+    conn = pool.getconn()
     try:
         with conn.cursor() as cur:
             cur.execute("INSERT INTO users (email, password_hash) VALUES (%s, %s)", (email, hashed_password))
             conn.commit()
     except psycopg2.IntegrityError:
-        return jsonify({"error": "An unknown error occurred."}), 409
+        return jsonify({"error": "This email is already registered."}), 409
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
-        release_db_connection(conn)
+        pool.putconn(conn)
     return jsonify({"message": "Account created successfully"}), 201
 
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json()
     email, password = data.get('email'), data.get('password')
-    if not email or not password:
-        return jsonify({"error": "Email and password are required"}), 400
-    conn = get_db_connection()
+    if not email or not password: return jsonify({"error": "Email and password are required"}), 400
+    conn = pool.getconn()
     try:
         with conn.cursor() as cur:
             cur.execute("SELECT user_id, password_hash FROM users WHERE email = %s", (email,))
@@ -94,14 +85,14 @@ def login():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
-        release_db_connection(conn)
+        pool.putconn(conn)
     if user and bcrypt.check_password_hash(user[1], password):
         token = jwt.encode({'user_id': str(user[0]), 'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)}, app.config['JWT_SECRET_KEY'], algorithm="HS256")
         return jsonify({"token": token}), 200
     else:
         return jsonify({"error": "Invalid email or password"}), 401
 
-# --- PDF Operations ---
+# --- PDF Operations (TOKEN IS REQUIRED for all of these) ---
 @app.route('/api/merge', methods=['POST'])
 @token_required
 def merge_files(current_user_id):
@@ -114,6 +105,7 @@ def merge_files(current_user_id):
     except Exception as e:
         return jsonify({'error': f'An error occurred: {str(e)}'}), 500
 
+# ... (All other PDF operation routes like split, compress, etc., MUST keep @token_required) ...
 @app.route('/api/split', methods=['POST'])
 @token_required
 def split_file(current_user_id):
@@ -123,10 +115,8 @@ def split_file(current_user_id):
     try:
         split_pdf_stream = split_pdf(file.stream, ranges)
         return send_file(split_pdf_stream, as_attachment=True, download_name='split.pdf', mimetype='application/pdf')
-    except ValueError as e:
-        return jsonify({'error': str(e)}), 400
-    except Exception as e:
-        return jsonify({'error': f'An error occurred: {str(e)}'}), 500
+    except ValueError as e: return jsonify({'error': str(e)}), 400
+    except Exception as e: return jsonify({'error': f'An error occurred: {str(e)}'}), 500
 
 @app.route('/api/pdf-to-word', methods=['POST'])
 @token_required
@@ -137,8 +127,7 @@ def pdf_to_word_route(current_user_id):
         word_stream = convert_pdf_to_word(file.stream)
         filename = file.filename.rsplit('.', 1)[0] + '.docx'
         return send_file(word_stream, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-    except Exception as e:
-        return jsonify({'error': f'An error occurred during conversion: {str(e)}'}), 500
+    except Exception as e: return jsonify({'error': f'An error occurred during conversion: {str(e)}'}), 500
 
 @app.route('/api/word-to-pdf', methods=['POST'])
 @token_required
@@ -149,8 +138,7 @@ def word_to_pdf_route(current_user_id):
         pdf_stream = convert_word_to_pdf(file.stream)
         filename = file.filename.rsplit('.', 1)[0] + '.pdf'
         return send_file(pdf_stream, as_attachment=True, download_name=filename, mimetype='application/pdf')
-    except Exception as e:
-        return jsonify({'error': f'An error occurred during conversion: {str(e)}'}), 500
+    except Exception as e: return jsonify({'error': f'An error occurred during conversion: {str(e)}'}), 500
 
 @app.route('/api/compress', methods=['POST'])
 @token_required
@@ -161,8 +149,7 @@ def compress_route(current_user_id):
     try:
         compressed_stream = compress_pdf(file.stream, level)
         return send_file(compressed_stream, as_attachment=True, download_name='compressed.pdf', mimetype='application/pdf')
-    except Exception as e:
-        return jsonify({'error': f'An error occurred during compression: {str(e)}'}), 500
+    except Exception as e: return jsonify({'error': f'An error occurred during compression: {str(e)}'}), 500
 
 @app.route('/api/unlock', methods=['POST'])
 @token_required
@@ -173,10 +160,8 @@ def unlock_route(current_user_id):
     try:
         unlocked_stream = unlock_pdf(file.stream, password)
         return send_file(unlocked_stream, as_attachment=True, download_name='unlocked.pdf', mimetype='application/pdf')
-    except ValueError as e:
-        return jsonify({'error': str(e)}), 400
-    except Exception as e:
-        return jsonify({'error': f'An error occurred: {str(e)}'}), 500
+    except ValueError as e: return jsonify({'error': str(e)}), 400
+    except Exception as e: return jsonify({'error': f'An error occurred: {str(e)}'}), 500
 
 @app.route('/api/protect', methods=['POST'])
 @token_required
@@ -187,43 +172,21 @@ def protect_route(current_user_id):
     try:
         protected_stream = protect_pdf(file.stream, password)
         return send_file(protected_stream, as_attachment=True, download_name='protected.pdf', mimetype='application/pdf')
-    except Exception as e:
-        return jsonify({'error': f'An error occurred: {str(e)}'}), 500
+    except Exception as e: return jsonify({'error': f'An error occurred: {str(e)}'}), 500
 
-# --- NEW DEBUG ENDPOINT ---
+# Remove the debug endpoint if you no longer need it, or keep it for future checks.
 @app.route('/api/debug-env', methods=['GET'])
 def debug_env():
-    """
-    A temporary endpoint to check the server environment for LibreOffice.
-    """
+    # ... (debug code is unchanged)
     try:
-        # We will try to find the path of the 'libreoffice' executable.
-        result = subprocess.run(
-            ['which', 'libreoffice'],
-            capture_output=True,
-            text=True,
-            check=False  # Do not raise an error if the command fails
-        )
-        
+        result = subprocess.run(['which', 'libreoffice'], capture_output=True, text=True, check=False)
         path_output = result.stdout.strip()
         error_output = result.stderr.strip()
-
-        if result.returncode == 0:
-            message = "LibreOffice executable found."
-            path = path_output
-        else:
-            message = "LibreOffice executable NOT found."
-            path = "N/A"
-
-        return jsonify({
-            "message": message,
-            "path": path,
-            "return_code": result.returncode,
-            "error_details": error_output
-        }), 200
-
+        if result.returncode == 0: message, path = "LibreOffice executable found.", path_output
+        else: message, path = "LibreOffice executable NOT found.", "N/A"
+        return jsonify({"message": message, "path": path, "return_code": result.returncode, "error_details": error_output}), 200
     except Exception as e:
-        return jsonify({"error": f"An exception occurred while running debug command: {str(e)}"}), 500
+        return jsonify({"error": f"An exception occurred: {str(e)}"}), 500
 
 # --- Main Entry Point ---
 if __name__ == '__main__':
