@@ -1,0 +1,241 @@
+.dashboard-container {
+    background-color: #1a1a2e; /* Dark blueish background */
+    min-height: 100vh;
+    padding: 40px;
+    color: white;
+    box-sizing: border-box;
+}
+
+.file-list-container {
+    margin-bottom: 20px;
+    background-color: #162447;
+    border-radius: 8px;
+    padding: 10px 20px;
+    min-height: 50px;
+}
+
+.file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #1f4068;
+    font-size: 0.9rem;
+}
+
+.file-item:last-child {
+    border-bottom: none;
+}
+
+.remove-file-btn {
+    background: none;
+    border: none;
+    color: #e43f5a;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.dropzone {
+    border: 2px dashed #4b5d67;
+    border-radius: 8px;
+    padding: 60px 20px;
+    text-align: center;
+    cursor: pointer;
+    background-color: #162447;
+    transition: background-color 0.3s, border-color 0.3s;
+    margin-bottom: 20px; /* Added space below dropzone */
+}
+
+.dropzone:hover, .dropzone-active {
+    background-color: #1f4068;
+    border-color: #8A2BE2; /* Purple from auth forms */
+}
+
+.dropzone p {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #c0c0c0;
+}
+
+.tools-grid {
+    margin-top: 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+}
+
+.tool-card {
+    background-color: #162447;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid transparent;
+}
+
+.tool-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(138, 43, 226, 0.3);
+    border-color: #8A2BE2;
+}
+
+/* Style for disabled tool cards */
+.tool-card.disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+.tool-card.disabled:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: transparent;
+}
+
+
+.tool-card img {
+    height: 50px;
+    margin-bottom: 15px;
+}
+
+.tool-card p {
+    margin: 0;
+    font-weight: 500;
+}
+
+.error-message-dashboard {
+    background-color: #ff4d4d20;
+    color: #ff4d4d;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    margin-top: 20px;
+    border: 1px solid #ff4d4d;
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.spinner {
+    border: 8px solid #f3f3f330;
+    border-top: 8px solid #8A2BE2; /* Purple */
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Styles for the modal inputs/buttons */
+.range-input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0 20px 0;
+    box-sizing: border-box;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: white;
+    font-size: 1rem;
+}
+
+.modal-action-btn {
+    width: 100%;
+    background: linear-gradient(90deg, #8A2BE2, #4B0082);
+    color: white;
+    padding: 15px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Corrected styles for the compression modal options */
+.compression-options {
+    display: flex;
+    flex-direction: column; /* Stack the options vertically */
+    gap: 15px; /* Add space between the options */
+    margin-bottom: 25px; /* Add space before the main button */
+    text-align: left; /* Align text to the left */
+}
+
+.compression-option {
+    padding: 15px;
+    border: 1px solid #444;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.compression-option.selected {
+    background-color: #8A2BE2;
+    border-color: #8A2BE2;
+}
+
+.compression-option:not(.selected):hover {
+    background-color: #2a2a2a;
+    border-color: #666;
+}
+
+.compression-option p {
+    margin: 0 0 5px 0; /* Add a little space below the title */
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.compression-option span {
+    font-size: 0.9rem;
+    color: #ccc;
+
+
+}
+
+/* ... at the bottom of the file ... */
+
+.loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: white;
+}
+
+.loading-content p {
+    font-size: 1.2rem;
+    margin-top: 20px;
+}
+
+.progress-bar-container {
+    width: 300px;
+    height: 25px;
+    background-color: #444;
+    border-radius: 15px;
+    margin-top: 15px;
+    overflow: hidden;
+    border: 1px solid #555;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #8A2BE2, #4B0082);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 0.9rem;
+    transition: width 0.3s ease-in-out;
+}
